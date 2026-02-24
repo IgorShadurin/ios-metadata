@@ -14,17 +14,20 @@ Metadata Info is a local-first iOS app that inspects technical metadata for file
 
 ## Showcase
 
-### Standard Device - iPhone 17 (Light)
-![Source - Light](showcase/light-source-standard.png)
-![Inspecting - Light](showcase/light-inspecting-standard.png)
-![Result - Light](showcase/light-result-standard.png)
+<p>
+  <img src="showcase/light-source-standard.png" alt="Source screen in light mode" width="220" />
+  <img src="showcase/light-inspecting-standard.png" alt="Inspecting screen in light mode" width="220" />
+  <img src="showcase/light-result-standard.png" alt="Result screen in light mode" width="220" />
+</p>
 
-### Standard Device - iPhone 17 (Dark)
-![Source - Dark](showcase/dark-source-standard.png)
-![Inspecting - Dark](showcase/dark-inspecting-standard.png)
-![Result - Dark](showcase/dark-result-standard.png)
+<p>
+  <img src="showcase/dark-source-standard.png" alt="Source screen in dark mode" width="220" />
+  <img src="showcase/dark-inspecting-standard.png" alt="Inspecting screen in dark mode" width="220" />
+  <img src="showcase/dark-result-standard.png" alt="Result screen in dark mode" width="220" />
+</p>
 
-### Screen Fit Validation
-![Small Device Fit](showcase/fit-small-result.png)
-![Standard Device Fit](showcase/fit-standard-result.png)
-![Large Device Fit](showcase/fit-large-result.png)
+<p>
+  <img src="showcase/fit-small-result.png" alt="Small device fit check" width="220" />
+  <img src="showcase/fit-standard-result.png" alt="Standard device fit check" width="220" />
+  <img src="showcase/fit-large-result.png" alt="Large device fit check" width="220" />
+</p>
