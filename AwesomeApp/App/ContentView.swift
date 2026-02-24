@@ -15,13 +15,16 @@ struct ContentView: View {
                 background
 
                 VStack(spacing: 10) {
-                    header
-                    stepRail
-                    controlsCard
+                    topBar
+                    stageBar
+                    actionCard
+                    if viewModel.isInspecting {
+                        progressCard
+                    }
                     statusCard
                     reportCard
                 }
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 12)
                 .padding(.vertical, 8)
             }
             .navigationBarHidden(true)
@@ -49,138 +52,150 @@ struct ContentView: View {
     }
 
     private var background: some View {
-        ZStack {
-            LinearGradient(
-                colors: colorScheme == .dark
-                ? [Color(red: 0.06, green: 0.08, blue: 0.10), Color(red: 0.10, green: 0.08, blue: 0.06)]
-                : [Color(red: 0.97, green: 0.94, blue: 0.90), Color(red: 0.93, green: 0.96, blue: 0.99)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-
-            RoundedRectangle(cornerRadius: 160, style: .continuous)
-                .fill(Color.teal.opacity(colorScheme == .dark ? 0.20 : 0.17))
-                .frame(width: 320, height: 200)
-                .blur(radius: 20)
-                .offset(x: 120, y: 300)
-
-            RoundedRectangle(cornerRadius: 160, style: .continuous)
-                .fill(Color.orange.opacity(colorScheme == .dark ? 0.20 : 0.15))
-                .frame(width: 280, height: 180)
-                .blur(radius: 22)
-                .offset(x: -120, y: -300)
-        }
+        LinearGradient(
+            colors: colorScheme == .dark
+            ? [Color(red: 0.08, green: 0.09, blue: 0.11), Color(red: 0.12, green: 0.10, blue: 0.08)]
+            : [Color(red: 0.97, green: 0.98, blue: 0.99), Color(red: 0.95, green: 0.96, blue: 0.94)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .ignoresSafeArea()
     }
 
-    private var header: some View {
+    private var topBar: some View {
         HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text("Metadata Info")
-                    .font(.system(size: 34, weight: .black, design: .serif))
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                    .minimumScaleFactor(0.8)
 
-                Text("Inspect any iOS-accessible file with technical detail")
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                Text("Inspect files from Photos and Files")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
-                    .lineLimit(2)
             }
 
             Spacer(minLength: 8)
 
-            VStack(spacing: 6) {
-                Image(systemName: "document.badge.magnifyingglass")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 42, height: 42)
-                    .background(
-                        LinearGradient(colors: [.orange, .teal], startPoint: .topLeading, endPoint: .bottomTrailing),
-                        in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+            Menu {
+                Button {
+                    viewModel.includeRawMetadata.toggle()
+                } label: {
+                    Label(
+                        viewModel.includeRawMetadata ? "Disable Raw Metadata" : "Enable Raw Metadata",
+                        systemImage: viewModel.includeRawMetadata ? "checkmark.circle.fill" : "circle"
                     )
+                }
 
-                Text("LOCAL")
-                    .font(.system(size: 9, weight: .bold, design: .rounded))
-                    .foregroundStyle(.secondary)
+                Button {
+                    viewModel.showOnlyEssential.toggle()
+                } label: {
+                    Label(
+                        viewModel.showOnlyEssential ? "Show All Sections" : "Show Essential Only",
+                        systemImage: viewModel.showOnlyEssential ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle"
+                    )
+                }
+
+                Divider()
+
+                Button(role: .destructive) {
+                    viewModel.reset()
+                } label: {
+                    Label("Reset", systemImage: "arrow.counterclockwise")
+                }
+            } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.primary)
+                    .frame(width: 40, height: 40)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.primary.opacity(0.08))
+                    )
             }
         }
     }
 
-    private var stepRail: some View {
+    private var stageBar: some View {
         HStack(spacing: 8) {
-            stepChip(title: "Source", icon: "square.and.arrow.down", isActive: viewModel.stepTitle == "Source")
-            stepChip(title: "Inspecting", icon: "gearshape.2", isActive: viewModel.stepTitle == "Inspecting")
-            stepChip(title: "Result", icon: "list.bullet.rectangle", isActive: viewModel.stepTitle == "Result")
+            stageChip(title: "Source", icon: "square.and.arrow.down", isActive: viewModel.stepTitle == "Source")
+            stageChip(title: "Inspecting", icon: "sparkles.rectangle.stack", isActive: viewModel.stepTitle == "Inspecting")
+            stageChip(title: "Result", icon: "list.bullet.rectangle", isActive: viewModel.stepTitle == "Result")
         }
     }
 
-    private var controlsCard: some View {
+    private var actionCard: some View {
         card {
-            VStack(spacing: 8) {
-                PhotosPicker(
-                    selection: $viewModel.pickerItem,
-                    matching: .any(of: [.images, .videos]),
-                    preferredItemEncoding: .automatic,
-                    photoLibrary: .shared()
-                ) {
-                    actionButton(title: "Import from Gallery", icon: "photo.on.rectangle", primary: true)
+            VStack(alignment: .leading, spacing: 9) {
+                Text("Select Content")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+
+                HStack(spacing: 8) {
+                    PhotosPicker(
+                        selection: $viewModel.pickerItem,
+                        matching: .any(of: [.images, .videos]),
+                        preferredItemEncoding: .automatic,
+                        photoLibrary: .shared()
+                    ) {
+                        actionButton(title: "Gallery", icon: "photo.on.rectangle", primary: true)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        showFileImporter = true
+                    } label: {
+                        actionButton(title: "Files", icon: "folder", primary: false)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
+
+                if viewModel.includeRawMetadata || viewModel.showOnlyEssential {
+                    HStack(spacing: 6) {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text(activeFilterSummary)
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private var progressCard: some View {
+        card {
+            HStack(spacing: 10) {
+                ProgressView()
+                    .controlSize(.small)
+
+                Text("Reading deep metadata...")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
+
+                Spacer(minLength: 0)
 
                 Button {
-                    showFileImporter = true
+                    viewModel.cancelInspection()
                 } label: {
-                    actionButton(title: "Import from Files", icon: "folder", primary: false)
+                    Label(viewModel.isCancelling ? "Cancelling" : "Cancel", systemImage: "xmark.circle.fill")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                .fill(Color.red.opacity(0.12))
+                        )
                 }
                 .buttonStyle(.plain)
-
-                HStack(spacing: 10) {
-                    Toggle(isOn: $viewModel.includeRawMetadata) {
-                        Label("Include raw metadata", systemImage: "text.alignleft")
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    }
-
-                    Toggle(isOn: $viewModel.showOnlyEssential) {
-                        Label("Essential only", systemImage: "line.3.horizontal.decrease")
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    }
-                }
-                .toggleStyle(.switch)
-
-                if viewModel.isInspecting {
-                    HStack(spacing: 10) {
-                        ProgressView()
-                            .controlSize(.small)
-
-                        Text("Reading deep metadata...")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(.secondary)
-
-                        Spacer(minLength: 0)
-
-                        Button {
-                            viewModel.cancelInspection()
-                        } label: {
-                            Label(viewModel.isCancelling ? "Cancelling..." : "Cancel", systemImage: "xmark.circle.fill")
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 6)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                        .fill(Color.red.opacity(0.12))
-                                )
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(!viewModel.canCancel)
-                    }
-                }
+                .disabled(!viewModel.canCancel)
             }
         }
     }
 
     private var statusCard: some View {
         card {
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 4) {
                 Label(viewModel.statusMessage, systemImage: "info.circle")
                     .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
@@ -198,27 +213,24 @@ struct ContentView: View {
         card {
             if let report = viewModel.report {
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 9) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(report.itemName)
-                                .font(.system(size: 17, weight: .bold, design: .rounded))
-                            Text(report.itemSubtitle)
-                                .font(.system(size: 11, weight: .medium, design: .rounded))
-                                .foregroundStyle(.secondary)
-                        }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(report.itemName)
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                        Text(report.itemSubtitle)
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(.secondary)
 
                         if let preview = report.previewImage {
                             Image(uiImage: preview)
                                 .resizable()
                                 .scaledToFill()
-                                .frame(height: 130)
+                                .frame(height: 128)
                                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }
 
                         let sections = visibleSections(from: report)
                         ForEach(sections.indices, id: \.self) { index in
-                            let section = sections[index]
-                            sectionView(section: section)
+                            sectionView(section: sections[index])
                         }
 
                         ForEach(report.warnings.indices, id: \.self) { index in
@@ -236,19 +248,18 @@ struct ContentView: View {
                         Button {
                             viewModel.reset()
                         } label: {
-                            actionButton(title: "Inspect Another Item", icon: "arrow.clockwise.circle", primary: false)
+                            actionButton(title: "Inspect Another", icon: "arrow.clockwise", primary: false)
                         }
                         .buttonStyle(.plain)
-                        .padding(.top, 4)
+                        .padding(.top, 2)
                     }
-                    .padding(.vertical, 3)
+                    .padding(.vertical, 2)
                 }
-                .frame(maxHeight: .infinity)
             } else {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("No metadata loaded yet")
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("No metadata loaded")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
-                    Text("Pick a file from Gallery or Files. The app reads baseline metadata immediately and enriches it with codec/bitrate/location details when available.")
+                    Text("Choose Gallery or Files. Advanced options are in the top-right menu.")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
@@ -257,16 +268,26 @@ struct ContentView: View {
         }
     }
 
+    private var activeFilterSummary: String {
+        var tokens: [String] = []
+        if viewModel.includeRawMetadata {
+            tokens.append("Raw metadata on")
+        }
+        if viewModel.showOnlyEssential {
+            tokens.append("Essential only")
+        }
+        return tokens.joined(separator: " • ")
+    }
+
     private func visibleSections(from report: MetadataReportSnapshot) -> [MetadataSection] {
         if !viewModel.showOnlyEssential {
             return report.sections
         }
-
         return report.sections.filter { essentialSections.contains($0.title) }
     }
 
     private func sectionView(section: MetadataSection) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 4) {
             Label(section.title, systemImage: section.icon)
                 .font(.system(size: 12, weight: .bold, design: .rounded))
                 .foregroundStyle(.secondary)
@@ -277,75 +298,73 @@ struct ContentView: View {
                     Text(field.key)
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
                         .foregroundStyle(.secondary)
-                        .frame(width: 120, alignment: .leading)
+                        .frame(width: 112, alignment: .leading)
 
                     Text(field.value)
                         .font(.system(size: 11, weight: .regular, design: .monospaced))
-                        .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
-        .padding(9)
+        .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.primary.opacity(0.05))
+                .fill(Color.primary.opacity(0.06))
         )
     }
 
-    private func stepChip(title: String, icon: String, isActive: Bool) -> some View {
+    private func stageChip(title: String, icon: String, isActive: Bool) -> some View {
         HStack(spacing: 5) {
             Image(systemName: icon)
                 .font(.system(size: 11, weight: .bold))
-
             Text(title)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
         }
-        .foregroundStyle(isActive ? Color.white : Color.primary.opacity(0.72))
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
+        .foregroundStyle(isActive ? Color.white : Color.primary.opacity(0.75))
+        .padding(.vertical, 6)
         .frame(maxWidth: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .fill(isActive ? AnyShapeStyle(LinearGradient(colors: [.orange, .teal], startPoint: .leading, endPoint: .trailing)) : AnyShapeStyle(Color.primary.opacity(0.08)))
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(
+                    isActive
+                    ? AnyShapeStyle(LinearGradient(colors: [.mint, .indigo], startPoint: .leading, endPoint: .trailing))
+                    : AnyShapeStyle(Color.primary.opacity(0.08))
+                )
         )
     }
 
     private func card<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 0, content: content)
-            .padding(11)
+            .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color(uiColor: .secondarySystemBackground).opacity(colorScheme == .dark ? 0.88 : 0.95))
+                    .fill(Color(uiColor: .secondarySystemBackground).opacity(colorScheme == .dark ? 0.92 : 0.98))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.primary.opacity(0.07), lineWidth: 1)
+                    .stroke(Color.primary.opacity(0.08), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(colorScheme == .dark ? 0.24 : 0.08), radius: 10, x: 0, y: 5)
     }
 
     private func actionButton(title: String, icon: String, primary: Bool) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.system(size: 13, weight: .bold))
-
             Text(title)
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
-
             Spacer(minLength: 0)
         }
         .foregroundStyle(primary ? Color.white : Color.primary)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 9)
         .frame(maxWidth: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
                 .fill(
                     primary
-                    ? AnyShapeStyle(LinearGradient(colors: [.orange, .teal], startPoint: .leading, endPoint: .trailing))
+                    ? AnyShapeStyle(LinearGradient(colors: [.mint, .indigo], startPoint: .leading, endPoint: .trailing))
                     : AnyShapeStyle(Color.primary.opacity(0.07))
                 )
         )
