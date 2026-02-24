@@ -1,0 +1,9 @@
+.DS_Store
+.build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.moved-aside
+
+# Prompt-required local working docs
+data/
